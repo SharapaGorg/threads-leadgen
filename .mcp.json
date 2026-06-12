@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "threads-leadgen": {
+      "command": "uv",
+      "args": ["run", "python", "scripts/run_mcp.py"],
+      "cwd": "C:/Dev/Dev_2025/threads-leadgenerator"
+    }
+  }
+}
