@@ -22,8 +22,25 @@ def build_tools(
         with dbmod.connect(db_path) as conn:
             return dbmod.list_topics(conn)
 
+    def add_topic(description: str) -> int:
+        with dbmod.connect(db_path) as conn:
+            return dbmod.create_topic(conn, description)
+
+    def pause_topic(topic_id: int) -> dict:
+        with dbmod.connect(db_path) as conn:
+            dbmod.set_topic_paused(conn, topic_id, True)
+        return {"ok": True, "topic_id": topic_id, "paused": True}
+
+    def resume_topic(topic_id: int) -> dict:
+        with dbmod.connect(db_path) as conn:
+            dbmod.set_topic_paused(conn, topic_id, False)
+        return {"ok": True, "topic_id": topic_id, "paused": False}
+
     return {
         "list_topics": list_topics,
+        "add_topic": add_topic,
+        "pause_topic": pause_topic,
+        "resume_topic": resume_topic,
     }
 
 
@@ -35,5 +52,20 @@ def create_server(db_path: Path, threads_client: ThreadsClient | None) -> FastMC
     def list_topics() -> list[dict]:
         """Все темы со счётчиками ключевиков и постов."""
         return tools["list_topics"]()
+
+    @mcp.tool()
+    def add_topic(description: str) -> int:
+        """Создать тему. Возвращает её id. Ключевики добавляй отдельно через commit_keywords."""
+        return tools["add_topic"](description)
+
+    @mcp.tool()
+    def pause_topic(topic_id: int) -> dict:
+        """Поставить тему на паузу — скрапер перестанет её обходить."""
+        return tools["pause_topic"](topic_id)
+
+    @mcp.tool()
+    def resume_topic(topic_id: int) -> dict:
+        """Снять тему с паузы."""
+        return tools["resume_topic"](topic_id)
 
     return mcp
