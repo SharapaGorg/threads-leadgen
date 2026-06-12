@@ -101,3 +101,48 @@ def list_topics(conn: sqlite3.Connection) -> list[dict]:
 
 def set_topic_paused(conn: sqlite3.Connection, topic_id: int, paused: bool) -> None:
     conn.execute("UPDATE topics SET paused = ? WHERE id = ?", (int(paused), topic_id))
+
+
+def add_keywords(conn: sqlite3.Connection, topic_id: int, keywords: list[str]) -> list[int]:
+    ids: list[int] = []
+    for text in keywords:
+        try:
+            cur = conn.execute(
+                "INSERT INTO keywords (topic_id, text) VALUES (?, ?)",
+                (topic_id, text),
+            )
+            ids.append(cur.lastrowid)
+        except sqlite3.IntegrityError:
+            row = conn.execute(
+                "SELECT id FROM keywords WHERE topic_id = ? AND text = ?",
+                (topic_id, text),
+            ).fetchone()
+            ids.append(row["id"])
+    return ids
+
+
+def list_active_keywords(conn: sqlite3.Connection) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT k.id, k.text, k.topic_id
+        FROM keywords k
+        JOIN topics t ON t.id = k.topic_id
+        WHERE k.enabled = 1 AND t.paused = 0
+        ORDER BY k.last_scraped_at IS NULL DESC, k.last_scraped_at ASC, k.id ASC
+        """
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_keyword_probe(conn: sqlite3.Connection, keyword_id: int, volume: int) -> None:
+    conn.execute(
+        "UPDATE keywords SET probed_volume_7d = ? WHERE id = ?",
+        (volume, keyword_id),
+    )
+
+
+def mark_keyword_scraped(conn: sqlite3.Connection, keyword_id: int) -> None:
+    conn.execute(
+        "UPDATE keywords SET last_scraped_at = ? WHERE id = ?",
+        (now_iso(), keyword_id),
+    )
