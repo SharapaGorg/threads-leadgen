@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.local
+
+# Data
+data/
+*.db
+*.db-journal
+session.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# uv
+.python-version
