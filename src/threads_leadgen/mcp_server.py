@@ -64,6 +64,23 @@ def build_tools(
             dbmod.mark_post(conn, post_id, status, why)
         return {"ok": True, "post_id": post_id, "status": status}
 
+    def search_leads(
+        status: str | None = None,
+        topic_id: int | None = None,
+        since: str | None = None,
+        query: str | None = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        with dbmod.connect(db_path) as conn:
+            return dbmod.search_leads(
+                conn, status=status, topic_id=topic_id,
+                since=since, query=query, limit=limit,
+            )
+
+    def stats(since: str | None = None) -> dict:
+        with dbmod.connect(db_path) as conn:
+            return dbmod.stats(conn, since)
+
     return {
         "list_topics": list_topics,
         "add_topic": add_topic,
@@ -74,6 +91,8 @@ def build_tools(
         "list_unreviewed": list_unreviewed,
         "get_post": get_post,
         "mark_post": mark_post,
+        "search_leads": search_leads,
+        "stats": stats,
     }
 
 
@@ -125,5 +144,21 @@ def create_server(db_path: Path, threads_client: ThreadsClient | None) -> FastMC
     def mark_post(post_id: str, status: str, why: str | None = None) -> dict:
         """Пометить пост. status ∈ {unreviewed, relevant, irrelevant, replied, skipped}. why — заметка для тебя."""
         return tools["mark_post"](post_id, status, why)
+
+    @mcp.tool()
+    def search_leads(
+        status: str | None = None,
+        topic_id: int | None = None,
+        since: str | None = None,
+        query: str | None = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """Поиск по уже размеченным постам. since — ISO-дата."""
+        return tools["search_leads"](status, topic_id, since, query, limit)
+
+    @mcp.tool()
+    def stats(since: str | None = None) -> dict:
+        """Сводка по темам: собрано / релевантных / непроверенных / отвечено."""
+        return tools["stats"](since)
 
     return mcp

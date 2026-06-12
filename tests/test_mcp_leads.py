@@ -47,3 +47,19 @@ def test_mark_post_rejects_unknown_status(tmp_path: Path):
     tools = build_tools(db_path=db, threads_client=None)
     with pytest.raises(ValueError):
         tools["mark_post"]("p1", "garbage")
+
+
+def test_search_leads_filter_status(tmp_path: Path):
+    db = tmp_path / "leads.db"; _seed(db)
+    tools = build_tools(db_path=db, threads_client=None)
+    tools["mark_post"]("p1", "relevant", "ok")
+    assert len(tools["search_leads"](status="relevant")) == 1
+    assert tools["search_leads"](status="irrelevant") == []
+
+
+def test_stats_basic(tmp_path: Path):
+    db = tmp_path / "leads.db"; _seed(db)
+    tools = build_tools(db_path=db, threads_client=None)
+    s = tools["stats"]()
+    assert s["per_topic"][0]["total"] == 1
+    assert s["per_topic"][0]["unreviewed"] == 1
