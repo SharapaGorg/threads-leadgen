@@ -51,6 +51,19 @@ def build_tools(
         with dbmod.connect(db_path) as conn:
             return dbmod.add_keywords(conn, topic_id, keywords)
 
+    def list_unreviewed(topic_id: int | None = None, limit: int = 30) -> list[dict]:
+        with dbmod.connect(db_path) as conn:
+            return dbmod.list_unreviewed(conn, topic_id, limit)
+
+    def get_post(post_id: str) -> dict | None:
+        with dbmod.connect(db_path) as conn:
+            return dbmod.get_post(conn, post_id)
+
+    def mark_post(post_id: str, status: str, why: str | None = None) -> dict:
+        with dbmod.connect(db_path) as conn:
+            dbmod.mark_post(conn, post_id, status, why)
+        return {"ok": True, "post_id": post_id, "status": status}
+
     return {
         "list_topics": list_topics,
         "add_topic": add_topic,
@@ -58,6 +71,9 @@ def build_tools(
         "resume_topic": resume_topic,
         "probe_keywords": probe_keywords,
         "commit_keywords": commit_keywords,
+        "list_unreviewed": list_unreviewed,
+        "get_post": get_post,
+        "mark_post": mark_post,
     }
 
 
@@ -94,5 +110,20 @@ def create_server(db_path: Path, threads_client: ThreadsClient | None) -> FastMC
     def commit_keywords(topic_id: int, keywords: list[str]) -> list[int]:
         """Привязать ключевики к теме. Дубликаты игнорятся. Скрапер подхватит со следующего цикла."""
         return tools["commit_keywords"](topic_id, keywords)
+
+    @mcp.tool()
+    def list_unreviewed(topic_id: int | None = None, limit: int = 30) -> list[dict]:
+        """Пачка непроверенных постов. Свежие сверху. topic_id опционально."""
+        return tools["list_unreviewed"](topic_id, limit)
+
+    @mcp.tool()
+    def get_post(post_id: str) -> dict | None:
+        """Полные детали поста."""
+        return tools["get_post"](post_id)
+
+    @mcp.tool()
+    def mark_post(post_id: str, status: str, why: str | None = None) -> dict:
+        """Пометить пост. status ∈ {unreviewed, relevant, irrelevant, replied, skipped}. why — заметка для тебя."""
+        return tools["mark_post"](post_id, status, why)
 
     return mcp
