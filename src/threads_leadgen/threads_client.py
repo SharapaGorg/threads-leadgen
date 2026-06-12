@@ -58,7 +58,7 @@ class ThreadsClient:
         self._client: httpx.Client | None = None
 
     def login(self) -> None:
-        cookie_file = self.session_path.with_suffix(".cookies.json")
+        cookie_file = self.session_path
         if not cookie_file.exists():
             raise ThreadsAuthError(
                 f"Cookies not found. Export your logged-in threads.net cookies "

@@ -7,10 +7,11 @@
 ```bash
 uv sync
 cp .env.example .env
-# отредактируй .env: впиши свои THREADS_USERNAME и THREADS_PASSWORD
 ```
 
-Для работы скрапера нужно экспортировать cookies из логин-сессии threads.net в браузере и сложить JSON-массив в `data/session.cookies.json` (используй расширение "Cookie Editor" или аналог). Без них `ThreadsClient.login()` падает с понятной ошибкой и подсказкой пути.
+`.env` редактировать не нужно — все дефолты разумные. `THREADS_USERNAME`/`THREADS_PASSWORD` можно оставить пустыми (резерв под будущий программный логин, сейчас не используются).
+
+Auth идёт через cookies. Экспортируй cookies из логин-сессии threads.net в браузере (расширение "Cookie Editor" → Export → JSON) и сохрани в файл по пути из `SESSION_PATH` (дефолт: `data/session.json`). Без файла `ThreadsClient.login()` падает с понятной ошибкой и подсказкой пути.
 
 ## Запуск
 
@@ -51,7 +52,7 @@ uv run python scripts/run_scraper.py
 uv run pytest
 ```
 
-Smoke-тест Threads (требует креды и экспортированные cookies) — отдельно:
+Smoke-тест Threads (требует экспортированные cookies в `data/session.json`) — отдельно:
 ```bash
 uv run pytest tests/test_threads_client_smoke.py -v -s
 ```
