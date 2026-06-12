@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from threads_leadgen.config import Config
 from threads_leadgen.db import init_db
 from threads_leadgen.scraper import run_forever
-from threads_leadgen.threads_client import ThreadsClient
+from threads_leadgen.threads_client import ThreadsClient, ThreadsAuthError
 
 
 def main() -> int:
@@ -33,6 +33,9 @@ def main() -> int:
     except KeyboardInterrupt:
         logging.info("interrupted, exiting cleanly")
         return 0
+    except ThreadsAuthError as e:
+        logging.error("threads auth failure, exiting: %s", e)
+        return 1
 
 
 if __name__ == "__main__":

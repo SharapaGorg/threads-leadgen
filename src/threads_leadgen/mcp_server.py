@@ -1,4 +1,6 @@
 from __future__ import annotations
+import random
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -11,6 +13,9 @@ from .threads_client import ThreadsClient
 def build_tools(
     db_path: Path,
     threads_client: ThreadsClient | None,
+    *,
+    probe_delay_range: tuple[float, float] = (2.0, 5.0),
+    sleep_fn: Callable[[float], None] = time.sleep,
 ) -> dict[str, Callable[..., Any]]:
     """Build a dict of bound tool callables.
 
@@ -42,7 +47,9 @@ def build_tools(
         if hasattr(threads_client, "_client") and threads_client._client is None:
             threads_client.login()
         out = []
-        for kw in keywords:
+        for i, kw in enumerate(keywords):
+            if i > 0:
+                sleep_fn(random.uniform(*probe_delay_range))
             volume, samples = threads_client.probe_volume_7d(kw)
             out.append({"keyword": kw, "volume_7d": volume, "samples": samples})
         return out
@@ -122,7 +129,8 @@ def create_server(db_path: Path, threads_client: ThreadsClient | None) -> FastMC
 
     @mcp.tool()
     def probe_keywords(keywords: list[str]) -> list[dict]:
-        """Прикинуть, сколько постов за 7 дней по каждой фразе + 3 примера. Дёргает Threads — НЕ запускай на 50 фразах сразу."""
+        """Прикинуть, сколько постов за 7 дней по каждой фразе + 3 примера. Дёргает Threads.
+        Между фразами 2–5 сек пауза (антибан); не больше 5 фраз за раз."""
         return tools["probe_keywords"](keywords)
 
     @mcp.tool()

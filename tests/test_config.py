@@ -1,5 +1,4 @@
 from pathlib import Path
-import pytest
 from threads_leadgen.config import Config
 
 
@@ -21,13 +20,14 @@ def test_config_from_env_file(tmp_path: Path):
     assert cfg.active_hours_end == 22
 
 
-def test_config_missing_required(tmp_path: Path, monkeypatch):
+def test_config_credentials_optional(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("THREADS_USERNAME", raising=False)
     monkeypatch.delenv("THREADS_PASSWORD", raising=False)
     env = tmp_path / ".env"
     env.write_text("DB_PATH=/tmp/leads.db\n")
-    with pytest.raises(RuntimeError, match="THREADS_USERNAME"):
-        Config.from_env(env)
+    cfg = Config.from_env(env)
+    assert cfg.threads_username == ""
+    assert cfg.threads_password == ""
 
 
 def test_config_defaults(tmp_path: Path, monkeypatch):

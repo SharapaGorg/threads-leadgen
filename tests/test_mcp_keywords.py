@@ -15,7 +15,10 @@ class FakeClient:
 def test_probe_keywords_returns_volumes(tmp_path: Path):
     db = tmp_path / "leads.db"; init_db(db)
     client = FakeClient({"alive": (42, ["s1", "s2"]), "dead": (0, [])})
-    tools = build_tools(db_path=db, threads_client=client)
+    tools = build_tools(
+        db_path=db, threads_client=client,
+        probe_delay_range=(0.0, 0.0), sleep_fn=lambda _: None,
+    )
     result = tools["probe_keywords"](["alive", "dead"])
     assert len(result) == 2
     alive = next(r for r in result if r["keyword"] == "alive")

@@ -113,8 +113,9 @@ class ThreadsClient:
         return [self._normalize(node) for node in self._extract_nodes(payload)[:limit]]
 
     def probe_volume_7d(self, keyword: str) -> tuple[int, list[str]]:
-        """Quick liveness check. Returns (count of last-7d posts, up to 3 sample texts)."""
-        posts = self.search_recent(keyword, limit=20)
+        """Quick liveness check. Returns (count of last-7d posts, up to 3 sample texts).
+        Small probe limit (5) to stay under the shared rate budget with the scraper."""
+        posts = self.search_recent(keyword, limit=5)
         cutoff = datetime.now(timezone.utc) - timedelta(days=7)
         recent: list[RawPost] = []
         for p in posts:
