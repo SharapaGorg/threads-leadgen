@@ -71,3 +71,33 @@ def connect(db_path: Path):
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def create_topic(conn: sqlite3.Connection, description: str) -> int:
+    cur = conn.execute(
+        "INSERT INTO topics (description, created_at) VALUES (?, ?)",
+        (description, now_iso()),
+    )
+    return cur.lastrowid
+
+
+def list_topics(conn: sqlite3.Connection) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT
+            t.id, t.description, t.paused, t.created_at,
+            COUNT(DISTINCT k.id) AS keyword_count,
+            SUM(CASE WHEN p.status = 'unreviewed' THEN 1 ELSE 0 END) AS posts_unreviewed,
+            SUM(CASE WHEN p.status = 'relevant'   THEN 1 ELSE 0 END) AS posts_relevant
+        FROM topics t
+        LEFT JOIN keywords k ON k.topic_id = t.id
+        LEFT JOIN posts    p ON p.keyword_id = k.id
+        GROUP BY t.id
+        ORDER BY t.id
+        """
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def set_topic_paused(conn: sqlite3.Connection, topic_id: int, paused: bool) -> None:
+    conn.execute("UPDATE topics SET paused = ? WHERE id = ?", (int(paused), topic_id))
